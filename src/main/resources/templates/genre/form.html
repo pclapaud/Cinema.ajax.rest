@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestion des genres</title>
+    <div th:replace="fragments/layout :: header-css"></div>
+</head>
+<body>
+<div th:include="fragments/layout :: header-page"></div>
+
+<div class="ui modal">
+    <div class="Header">
+        Modification/Ajout d'un genre
+    </div>
+    <div class="ui padded form">
+        <input type="hidden" name="id" id="id-genre">
+        <div class="fourteen wide field">
+            <input type="text" name="name"  id="name-genre">
+        </div>
+        <div class="actions">
+
+                <div class="circular ui green icon button" onclick="validForm()">
+                    <i class="white check icon icon"></i>
+                </div>
+                <div class="circular ui icon red button" onclick="eraseGenre()">
+                    <i class="white close icon icon"></i>
+                </div>
+            <div class="circular ui icon yellow button"onclick="closewindow()">
+                <i class="white close icon icon"></i>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+<table class="ui celled table">
+    <thead>
+    <tr>
+        <th>Genre</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="genre, rowStat: ${genres}">
+
+        <td th:onclick="'openDialog(' + ${genre.id}+')'" th:text="${genre.name}" th:id="'genre'+ ${genre.id}">Un genre</td></i>
+
+    </tr>
+
+    </tbody>
+</table>
+<td><a class="small circular ui blue icon button"
+       th:onclick="'openDialog2()'"><i class="small white edit icon"></i>
+</a></td>
+<div th:include="fragments/layout :: footer-js"></div>
+<script type="application/javascript">
+    $('#menu-genres').addClass("active");
+    $('.ui.dropdown').dropdown();
+    $('.ui.modal').modal();
+
+
+    function closewindow() {
+        $('.ui.modal').modal('hide');
+    }
+
+    function openDialog(idGenre) {
+        eltIdGenre = 'genre' + idGenre;
+        elt = document.getElementById(eltIdGenre);
+        console.log(elt.textContent + " (id= '" + eltIdGenre + "')");
+        document.getElementById('id-genre').value = idGenre;
+        document.getElementById('name-genre').value = document.getElementById(eltIdGenre).textContent;
+        $('.ui.modal').modal('show');
+    }
+    function openDialog2() {
+        $('.ui.modal').modal('show');
+    }
+
+    function validForm() {
+        $('.ui.modal').modal('hide');
+        genreVal = {
+            "id": document.getElementById('id-genre').value,
+            "name": document.getElementById('name-genre').value
+        };
+
+        console.log(genreVal);
+        $.ajax({
+            url: '/api/genre',
+            type: 'post',
+            dataType: 'json',
+            contentType: 'application/json',
+            success: onSuccessUpdateNameGenre,
+            error: onErrorOnUpdateNameGenre,
+            data: JSON.stringify(genreVal)
+        });
+    }
+
+    function onSuccessUpdateNameGenre(result) {
+
+        var id = result.id;
+        idElt = "#genre" + result.id;
+        newName = result.name;
+        if ($(idElt).length!=0) {
+            $(idElt).text(newName);
+        }
+        else{
+            console.log("false");
+            tablee = document.getElementsByClassName("ui celled table").item(0);
+            tablee = tablee.getElementsByTagName("tbody").item(0);
+            ligne = tablee.insertRow(0);
+            // cellule = ligne.insertCell(0);
+            console.log(tablee);
+            tr = document.createElement('td');
+            tr.textContent = result.name;
+            tr.setAttribute("id","genre"+id);
+            tr.addEventListener("click",function () { openDialog(id) });
+            ligne.appendChild(tr);
+
+        }
+
+    }
+
+
+    function onErrorOnUpdateNameGenre(jqXHR, textStatus, errorThrown) {
+        alert("Echec de l'opération de mise à jour...");
+        console.log('jqXHR:');
+        console.log(jqXHR);
+        console.log("message d'erreur: "+jqXHR.responseJSON.message);
+        console.log('textStatus:');
+        console.log(textStatus);
+        console.log('errorThrown:');
+        console.log(errorThrown);
+    }
+
+    function eraseGenre() {
+        $('.ui.modal').modal('hide');
+        genreVal = {
+            "id": document.getElementById('id-genre').value,
+            "name": document.getElementById('name-genre').value
+        };
+        console.log(genreVal);
+        $.ajax({
+            url: '/api/genre',
+            type: 'delete',
+            dataType: 'json',
+            contentType: 'application/json',
+            success: onSuccessDelete,
+            error: onErrorOnDelete,
+            data: JSON.stringify(genreVal)
+        });
+        function onErrorOnDelete(jqXHR, textStatus, errorThrown) {
+            alert("Echec de l'opération de mise à jour...");
+            console.log('jqXHR:');
+            console.log(jqXHR);
+            console.log("message d'erreur: "+jqXHR.responseJSON.message);
+            console.log('textStatus:');
+            console.log(textStatus);
+            console.log('errorThrown:');
+            console.log(errorThrown);
+        }
+        function onSuccessDelete(result) {
+
+            idElt = "#genre" + result.id;
+            console.log(result);
+            elt = $(idElt).parent();
+            console.log(elt);
+            elt.remove();
+        }
+
+
+
+    }
+
+
+</script>
+</body>
+</html>
